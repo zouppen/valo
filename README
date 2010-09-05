@@ -1,0 +1,19 @@
+Haskell modules for controlling DMX lights via ENTTEC USB DMX Pro.
+
+Usage for 2 lights connected to DMX address 1 and 6 and DMX controller
+is at /dev/ttyUSB1:
+
+$ ghci DMX.hs LightSource.hs
+> :m +LightSource
+> bus <- createBus "/dev/ttyUSB1"
+> let eka = Light 1 a
+> let toka = Light 6 a
+> setLight eka (Color 255 255 255)
+> sendDMX a
+> setLight eka (Color 255 255 0)
+> sendDMX a
+> setLight toka (Color 0 255 0)
+> sendDMX a
+> setLight toka (Color 127 255 0)
+> setLight eka (Color 255 255 255)
+> sendDMX a
