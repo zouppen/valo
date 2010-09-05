@@ -5,7 +5,7 @@ is at /dev/ttyUSB1:
 
 $ ghci DMX.hs LightSource.hs
 > :m +LightSource
-> bus <- createBus "/dev/ttyUSB1"
+> bus <- createBus "/dev/serial/by-id/usb-ENTTEC_DMX_USB_PRO_ENR35XBU-if00-port0"
 > let eka = Light 1 a
 > let toka = Light 6 a
 > setLight eka (Color 255 255 255)
