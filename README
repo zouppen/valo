@@ -1,7 +1,16 @@
+Valo
+====
+
 Haskell modules for controlling DMX lights via ENTTEC USB DMX Pro.
+Contains also an UDP server for receiving color codes.
+
+For information about UDP server, see README.udp.
+
+"Raw" usage
+-----------
 
 Usage for 2 lights connected to DMX address 1 and 6 and DMX controller
-is at /dev/ttyUSB1:
+is at default location (in Linux):
 
 $ ghci DMX.hs LightSource.hs
 > :m +LightSource
@@ -17,3 +26,21 @@ $ ghci DMX.hs LightSource.hs
 > setLight toka (Color 127 255 0)
 > setLight eka (Color 255 255 255)
 > sendDMX bus
+
+Blinking lights
+---------------
+
+With Experiments.hs and Timing.hs there is funky DMX light replacement
+of HTML blink tag. :-D To blink two lights in turn at 2.1
+blinks-per-second, you can run:
+
+> bus <- myBus
+> sequenceFps 2.1 $ switchActions bus 
+> closeBus bus
+
+Troubleshooting:
+
+If your lamps do not react to commands, you can try switching lamps on
+by dumping one DMX test "frame" directly to the device:
+
+$ cat test_lamps.dat >/dev/serial/by-id/usb-ENTTEC_DMX_USB_PRO_ENR35XBU-if00-port0"

@@ -4,12 +4,14 @@ import Data.Time.Clock.POSIX (getPOSIXTime)
 import Control.Concurrent (threadDelay)
 import Control.Monad (when)
 
-frameTiming :: Integer -> IO [Integer]
+-- |Computes suitable frame times for actions. Uses wall clock and
+-- |given frames-per-second value to compute timings for all following
+-- |"frames".
+frameTiming :: (RealFrac a) => a -> IO [Integer]
 frameTiming fps = do
   now <- getMicroTime
-  --let now = 0
   return $ map (stamp now) [1..]
-    where interval = 1000000 `div` fps
+    where interval = round $ 1e6 / fps
           stamp now i = now + i * interval
 
 -- |Gets current time in microseconds.
