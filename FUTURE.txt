@@ -1,0 +1,29 @@
+=================
+Future expansions
+=================
+
+First some small things to do:
+
+- Support for packets containing settings for multiple lamps
+
+Then, some bigger ones:
+
+Light simulator
+===============
+
+The inspiration behind this is to simulate the lamps virtually when
+there are no real equipment. Simulator allows the user to sync his/her
+multimedia splatting perfectly.
+
+Simulator listen to UDP port 9909 (which Valo normally listens) and
+receives light commands. When a packet is received, the color is
+changed on the screen.
+
+This may be either little Qt application or even a massive OpenGL
+visualizator. You can pick anything.
+
+The current UDP protocol is specified in README-udp.txt. Only two
+lights are present on my real hardware so the simulator doesn't need
+to support more yet.
+
+Please help me with this. I'm incompetent with graphics.
