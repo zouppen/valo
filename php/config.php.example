@@ -1,0 +1,7 @@
+<?php
+// Hostname and port for Valo lightServer.
+
+$light_host = "10.0.0.3";
+$light_port = 9909
+
+?>
