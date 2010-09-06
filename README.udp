@@ -49,8 +49,8 @@ Limitations
 -----------
 
 Due to DMX limitations, feasible update frequencies are about 20
-command per seconds. If you send commands too fast, no real DMX action
-is performed until the next DMX update pass (or whatever it is
+commands per seconds. If you send commands too fast, no real DMX
+action is performed until the next DMX update pass (or whatever it is
 called). If your lights look a bit glitchy, try to increase update
 interval.
 

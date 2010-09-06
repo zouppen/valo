@@ -4,6 +4,7 @@
 
 module DMX where
 
+import Data.Bits
 import Data.Word
 import System.IO
 import Data.Array.IO
@@ -13,20 +14,33 @@ data Bus = Bus {
     , states :: IOUArray Int Word8
 }
 
-busLength = 512 + 5 -- Hard-coded 512-length bus plus header.
-label     = 6       -- Mystical constant.
-firstChan = 4       -- Byte offset of first channel.
+busChans   = 512 :: Int   -- Channels on bus.
+dataLength = busChans + 5 -- Header included.
+label      = 6            -- Mystical constant.
+firstChan  = 4            -- Byte offset of first channel.
 
+-- |Opens DMX device initializes DMX data structure.
+-- |in DMX data structure.
 createBus :: FilePath -> IO Bus
 createBus device = do
+  -- Opens DMX device.
   h <- openFile device WriteMode
-  arr <- newArray (0,busLength) 0
+
+  -- Every channel is 0 by default.
+  arr <- newArray (0,dataLength-1) 0
   
-  -- Setting static values for DMX bus.
+  -- First 2 bytes.
   writeArray arr 0 0x7e
   writeArray arr 1 label
-  writeArray arr 3 0x02 -- Data length: 512
- 
+
+  -- Write bus channel count in little-endian format. Array contains
+  -- Word8 elements, therefore .&. 0xff is done automatically.
+  writeArray arr 2 $ fromIntegral busChans
+  writeArray arr 3 $ fromIntegral (shiftR busChans 8)
+
+  -- Writes terminating byte.
+  writeArray arr (dataLength-1) 0xe7
+
   return $ Bus h arr
 
 closeBus :: Bus -> IO ()
@@ -35,7 +49,7 @@ closeBus bus = do
 
 sendDMX :: Bus -> IO ()
 sendDMX bus = do
-  hPutArray (devH bus) (states bus) busLength
+  hPutArray (devH bus) (states bus) dataLength
 
 --setChannel :: (MArray IOUArray Word8 m) => Bus -> Int -> Word8 -> m ()
 setChannel bus channel value = do
