@@ -1,41 +1,103 @@
+=============================
 UDP light controlling support
 =============================
 
 Valo has support for listening to UDP port 9909 for incoming light
 commands. The support is quite hard-wired but working. :-)
 
+
+Terminology
+===========
+
+You can do well without understanding these terms. Just look to
+example section.
+
+Word8
+    Unsigned 8 bit integer. Is usually an unsigned char in C.
+
+Word32be
+    Unsigned 32 bit integer in big endian format. In C this can
+    be got with htonl() from unsigned int.
+
+
 Server
-------
+======
 
 To start Valo server, just run:
 
 $ ghci UDPCommander.hs
 > lightServer
 
-Packet format
--------------
 
-Packets are composed of four unsigned 8-bit integers. The first one
-contains the lamp number and successive three values contain
-brightness data for red, green and blue, respectively.
+Packet format
+=============
+
+Please note: This is the new version of packet format. The software
+support is added later today.
+
+A packet is composed of zero or more commands. All commands in one
+packet are executed in one pass, immediately after the whole packet is
+parsed.
+
+A command is composed of command type and command data. Depending of
+command type, different data section is expected. Packet type field is
+32 bit unsigned big-endian integer. Multiple commands in one packet
+are concatenated with no padding.
+
+Supported commands and their codes are following:
+
+0. 8-bit precision RGB light source (DMX LED PAR or similar)
+
+Support for more types are added as the software becomes more feature
+rich.
+
+8-bit precision RGB light source
+--------------------------------
+
+This command is composed of command type, light source ID and
+intensities of three colour components: red, green and blue.
+
+Common type of hardware is LED PAR connected to the computer via DMX
+bus.
+
++-----------+-------------+-------------------------+
+| Data type | Range       | Meaning                 |
++===========+=============+=========================+
+| Word32be  | 0           | Command type. Always 0. |
++-----------+-------------+-------------------------+
+| Word32be  | 0 .. 2^32-1 | Light source ID         |
++-----------+-------------+-------------------------+
+| Word8     | 0 .. 255    | Intensity of red        |
++-----------+-------------+-------------------------+
+| Word8     | 0 .. 255    | Intensity of green      |
++-----------+-------------+-------------------------+
+| Word8     | 0 .. 255    | Intensity of blue       |
++-----------+-------------+-------------------------+
+
+
+Examples
+========
 
 To put the first lamp white, you need to send the following data. Data
 is given in hexadecimal format for clarity:
 
-  00 FF FF FF
+  00 00 00 00 00 00 00 00 FF FF FF
 
 To put second lamp yellow:
 
-  01 FF FF 00
+  00 00 00 00 00 00 00 01 FF FF 00
 
-First lamp is assumed to be in DMX address of 1 and the second is at
-address 6. The assumptions are done in UDPCommander.hs.
+To put do the following two operations in a single packet.
 
-Remember: Only one command per packet is allowed. This may change in
-future but now it works this way.
+  00 00 00 00 00 00 00 00 FF FF FF 00 00 00 00 00 00 00 01 FF FF 00
+
+Issuing multiple commands in a single packet is recommended because it
+quarantees that light switching is atomic (or atomic enough for human
+eye).
+
 
 Testing
--------
+=======
 
 Before your own implementation is ready, you are free to try sending
 data with netcat to see how it works:
@@ -45,8 +107,9 @@ nc -w 0 -u server_address 9909 <udp-example/1-yellow.dat
 
 Now your house is filled with funky colors. \o/
 
+
 Limitations
------------
+===========
 
 Due to DMX limitations, feasible update frequencies are about 20
 commands per seconds. If you send commands too fast, no real DMX
@@ -54,11 +117,17 @@ action is performed until the next DMX update pass (or whatever it is
 called). If your lights look a bit glitchy, try to increase update
 interval.
 
-DMX channels are hard-coded in UDPCommander.hs. Feel free to rewrite
-my code to support configuration files. :-)
+DMX channels are hard-coded in UDPCommander.hs.
+
+On my hardware, first lamp is assumed to be in DMX address of
+1 and the second is at address 6. These assumptions are done in
+UDPCommander.hs. This is a temporary hack.
+
+Feel free to rewrite my code to support configuration files. :-)
+
 
 Security
---------
+========
 
 None. Use firewalls for port 9909 if you want to protect
 yourself. This can be improved if there is any need.
