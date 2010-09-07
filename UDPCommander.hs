@@ -36,17 +36,19 @@ socketHandler parseF sock = do
   parseF mesg
   socketHandler parseF sock
 
--- |Parses single packet and performs the actions needed.
+-- |Parses single packet and performs the actions needed.  FIXME: This
+-- is only a hack to support multiple commands and new packet
+-- format. Rewrite is coming.
 lightParser :: [(Char, Light)] -> [Char] -> IO ()
-lightParser lights (lightB:r:g:b:trash) = do
-  when (extra /= 0) $ logError $ "Packet is " ++ show extra ++ " bytes too long."
+lightParser lights ('\x00':'\x00':'\x00':'\x00':'\x00':'\x00':'\x00':lightB:r:g:b:next) = do
   case lookup lightB lights of
     Nothing -> logError $ "Unknown lamp: " ++ show (fromEnum lightB)
     Just light -> setLightInstantly light (Color (enumMangle r)
                                                  (enumMangle g)
                                                  (enumMangle b))
-    where extra = length trash
-lightParser _ _ = logError "Incoming packet is too short."
+  lightParser lights next
+lightParser _ [] = return () -- End of multi-command
+lightParser _ x = logError $ "Incoming command is broken. Length: " ++ show (length x)
   
 -- |Just writes errors to the console.
 logError :: [Char] -> IO ()

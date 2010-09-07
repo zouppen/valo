@@ -11,7 +11,9 @@ if (!(isset($_GET['i']) &&
 	exit(1);
 }
 
-$bytes = chr($_GET['i']).chr($_GET['r']).chr($_GET['g']).chr($_GET['b']);
+// Pack is byte order aware. Cool.
+$bytes = pack("NNCCC",0,$_GET['i'],
+	      $_GET['r'],$_GET['g'],$_GET['b']);
 
 send_frame($bytes, $light_host, $light_port);
 echo "ok.";

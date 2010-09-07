@@ -15,7 +15,7 @@ Usage
 
 HTTP request is formed of the following GET parameters:
 
- i = index of the light source, either 0 or 1.
+ i = index of the light source, either 0 or 1 on my hardware.
  r = red component channel, 0-255
  g = green ...
  b = blue ...
@@ -27,3 +27,7 @@ http://www.example.com/lights.php?i=0&r=255&g=0&b=120
 
 You can use XMLHttpRequest to change colors in your funky Web 2.0
 application! Even wget works, too :-)
+
+Please note: This implementation lacks support for multiple commands
+in one request. Feel free to improve PHP script. Well, for any serious
+light control, use UDP. :-)

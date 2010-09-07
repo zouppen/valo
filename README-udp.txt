@@ -32,9 +32,6 @@ $ ghci UDPCommander.hs
 Packet format
 =============
 
-Please note: This is the new version of packet format. The software
-support is added later today.
-
 A packet is composed of zero or more commands. All commands in one
 packet are executed in one pass, immediately after the whole packet is
 parsed.
@@ -87,7 +84,7 @@ To put second lamp yellow:
 
   00 00 00 00 00 00 00 01 FF FF 00
 
-To put do the following two operations in a single packet.
+To put do the preceding two operations in a single packet:
 
   00 00 00 00 00 00 00 00 FF FF FF 00 00 00 00 00 00 00 01 FF FF 00
 
@@ -104,6 +101,10 @@ data with netcat to see how it works:
 
 nc -w 0 -u server_address 9909 <udp-example/0-orchid.dat
 nc -w 0 -u server_address 9909 <udp-example/1-yellow.dat
+
+Or, if you want to splash both in a single packet:
+
+nc -w 0 -u server_address 9909 <udp-example/0-1-combo.dat
 
 Now your house is filled with funky colors. \o/
 
