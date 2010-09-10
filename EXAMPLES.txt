@@ -1,0 +1,21 @@
+Examples
+========
+
+mIRC
+----
+
+AirZero coded an alias for mIRC to change lights via IRC. Before this
+I didn't even think about mIRC is capable of posting UDP packets :D To
+use this, you need to have udp-example/1-black.dat in a suitable
+directory for mIRC. Also, change server_address to your light server IP.
+
+on 1:TEXT:epilepsia*:#:{ msg $chan $nick changed the colour
+	/vari $2 $3 $4
+}
+
+/bread 1-black.dat 0 11 &flash
+
+alias vari {
+      /bset &flash 9 $1 $2 $3
+      /sockudp -k socketname server_address 9909 &flash
+}
