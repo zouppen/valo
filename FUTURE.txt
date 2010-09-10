@@ -4,7 +4,7 @@ Future expansions
 
 First some small things to do:
 
-- Support for packets containing settings for multiple lamps
+- None
 
 Then, some bigger ones:
 
@@ -12,7 +12,7 @@ Light simulator
 ===============
 
 The inspiration behind this is to simulate the lamps virtually when
-there are no real equipment. Simulator allows the user to sync his/her
+there is no real equipment. Simulator allows the user to sync his/her
 multimedia splatting perfectly.
 
 Simulator listen to UDP port 9909 (which Valo normally listens) and
@@ -27,3 +27,29 @@ lights are present on my real hardware so the simulator doesn't need
 to support more yet.
 
 Please help me with this. I'm incompetent with graphics.
+
+More inputs and outputs
+================
+
+Different kinds of buses:
+
+- DMX bus (supported)
+- Simulator bus
+- UDP output bus
+- File writer bus
+
+User friendly programs
+
+- lightSource (missing main functino)
+- lightSimulator
+
+Tracker reader
+=========
+
+Reads Schism Tracker (or any other tracker) files and plays back light
+commands as the file is played back. That way it is easy for musicians
+to design light shows, too.
+
+This may require some metadata for mapping the channels and notes to
+lights and colours.
+
