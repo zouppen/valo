@@ -6,6 +6,14 @@ Contains also an UDP server for receiving color codes.
 
 For information about UDP server, see README.udp.
 
+Requirements
+------------
+
+In Ubuntu and Debian, these are package names you can install directly
+with apt-get:
+
+libghc6-time-dev libghc6-network-dev
+
 "Raw" usage
 -----------
 
