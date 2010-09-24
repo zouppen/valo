@@ -17,6 +17,10 @@ import LightSource
 udpPort = 9909
 maxline = 1500
 
+-- TODO Until something better is done, this may serve the purpose of
+-- main function.
+main = lightServer
+
 lightServer :: IO ()
 lightServer = do
   bus <- createBus "/dev/serial/by-id/usb-ENTTEC_DMX_USB_PRO_ENR35XBU-if00-port0"

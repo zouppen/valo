@@ -44,3 +44,14 @@ If your lamps do not react to commands, you can try switching lamps on
 by dumping one DMX test "frame" directly to the device:
 
 $ cat test_lamps.dat >/dev/serial/by-id/usb-ENTTEC_DMX_USB_PRO_ENR35XBU-if00-port0"
+
+Compiling:
+----------
+
+To compile UDP light server as a static binary:
+
+ghc --make UDPCommander.hs
+
+If you want smaller binary and you have all the "dyn" libraries, you can use:
+
+ghc --make -dynamic UDPCommander.hs
