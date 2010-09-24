@@ -47,12 +47,14 @@ lightParser :: [(Char, Light)] -> [Char] -> IO ()
 lightParser lights ('\x00':'\x00':'\x00':'\x00':'\x00':'\x00':'\x00':lightB:r:g:b:next) = do
   case lookup lightB lights of
     Nothing -> logError $ "Unknown lamp: " ++ show (fromEnum lightB)
-    Just light -> setLightInstantly light (Color (enumMangle r)
-                                                 (enumMangle g)
-                                                 (enumMangle b))
+    Just light -> setLight light (Color (enumMangle r)
+                                        (enumMangle g)
+                                        (enumMangle b))
   lightParser lights next
-lightParser _ [] = return () -- End of multi-command
+lightParser lights [] = sendDMX (getBusStupidWay lights) -- End of multi-command. Flush lights.
 lightParser _ x = logError $ "Incoming command is broken. Length: " ++ show (length x)
+
+getBusStupidWay ((_, (Light _ bus)):xs) = bus
   
 -- |Just writes errors to the console.
 logError :: [Char] -> IO ()
