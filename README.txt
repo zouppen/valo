@@ -56,10 +56,6 @@ $ cat test_lamps.dat >/dev/serial/by-id/usb-ENTTEC_DMX_USB_PRO_ENR35XBU-if00-por
 Compiling:
 ----------
 
-To compile UDP light server as a static binary:
-
-ghc --make UDPCommander.hs
-
-If you want smaller binary and you have all the "dyn" libraries, you can use:
-
-ghc --make -dynamic UDPCommander.hs
+You can use DMX controller directly from your GHCi. But if you want to,
+you can compile the UDP light server. Instructions for doing that are
+in README-udp.txt

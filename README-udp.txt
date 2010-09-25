@@ -26,7 +26,22 @@ Server
 To start Valo server, just run:
 
 $ ghci UDPCommander.hs
-> lightServer
+> lightServer path_to_device
+
+You can also compile the server for standalone use.
+To compile UDP light server as a static binary:
+
+ghc --make UDPCommander.hs
+
+If you want smaller binary and you have all the "dyn" libraries, you can use:
+
+ghc --make -dynamic UDPCommander.hs
+
+Then, to run standalone server, invoke:
+
+$ UDPCommander [device]
+
+You can omit device path if you want to use the default of ENTTEC DMX USB PRO.
 
 
 Packet format

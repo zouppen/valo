@@ -10,6 +10,7 @@ import Data.Time ()
 import Data.Time.Clock (getCurrentTime) -- For error msgs.
 import Control.Monad (when)
 import System.IO (hPutStrLn, stderr)
+import System.Environment (getArgs)
 
 import DMX
 import LightSource
@@ -19,11 +20,18 @@ maxline = 1500
 
 -- TODO Until something better is done, this may serve the purpose of
 -- main function.
-main = lightServer
+main = do
+  args <- getArgs
+  let dev = case args of
+              [x] -> x
+              [] -> "/dev/serial/by-id/usb-ENTTEC_DMX_USB_PRO_ENR35XBU-if00-port0"
+              _ -> error "Usage: UDPCommander [device]"
 
-lightServer :: IO ()
-lightServer = do
-  bus <- createBus "/dev/serial/by-id/usb-ENTTEC_DMX_USB_PRO_ENR35XBU-if00-port0"
+  lightServer dev
+
+lightServer :: FilePath -> IO ()
+lightServer dev = do
+  bus <- createBus dev
   let lights = [('\x00',Light 1 bus)
                ,('\x01',Light 6 bus)
                ]
