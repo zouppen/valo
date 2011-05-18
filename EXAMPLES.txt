@@ -4,6 +4,10 @@ Examples
 Python
 ------
 
+See interfaces/colorselect.py for a GTK color chooser.
+
+Here is a simple snippet which defines set_light function:
+
 # -*- coding: utf-8 -*-
 import socket
 import struct
@@ -16,8 +20,9 @@ def set_light(i, r,g,b):
     command_out = struct.pack('>LLBBB',0,i,r,g,b)
     UDPSock.sendto(command_out, addr)
 
+# Let's try that one.
 for i in range(32, 46):
-    print "Sytytetään lamppu numero", i
+    print "Light number ", i
     set_light(i, 0, 255, 0)
     time.sleep(0.2)
     set_light(i, 255, 0, 0)
