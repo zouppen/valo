@@ -19,10 +19,10 @@ dataLength = busChans + 5 -- Header included.
 label      = 6            -- Mystical constant.
 firstChan  = 4            -- Byte offset of first channel.
 
--- |Opens DMX device initializes DMX data structure.
--- |in DMX data structure.
-createBus :: FilePath -> IO Bus
-createBus device = do
+-- |Opens DMX device initializes DMX data structure.  |in DMX data
+-- structure. Initial table is given as a plain 8-bit array.
+--createBus :: FilePath -> [Word8] -> IO Bus
+createBus device initial = do
   -- Opens DMX device.
   h <- openFile device WriteMode
 
@@ -41,7 +41,14 @@ createBus device = do
   -- Writes terminating byte.
   writeArray arr (dataLength-1) 0xe7
 
-  return $ Bus h arr
+  -- Fill in initial values.
+  let bus = Bus h arr
+  mapM_ (uncurry $ setChannel bus) initial
+      
+  -- Send initial content
+  sendDMX bus
+  
+  return bus
 
 closeBus :: Bus -> IO ()
 closeBus bus = do
