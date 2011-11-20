@@ -11,9 +11,6 @@ import EnttecDmxUsbPro
 import Dmx
 
 
--- TODO add this check
---    | channel < 0 = fail "Channel below zero"
---    | channel >= universeSize = fail "Channel number too high"
 
 runReceiver devPath = do
   s <- create devPath

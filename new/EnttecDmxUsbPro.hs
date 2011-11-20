@@ -1,6 +1,4 @@
--- |Simple module for controlling DMX. This doesn't
--- check all errors, like writing over headers with
--- negative addresses.
+-- |Module for controlling DMX via Enttec DMX USB Pro.
 module EnttecDmxUsbPro (Enttec) where
 
 import Control.Monad (unless)
@@ -48,13 +46,16 @@ configureSerialPort devPath = do
   code <- rawSystem "stty" ["-F",devPath,"9600","cs8","-cstopb","-parodd","-parenb","raw"]
   unless (code==ExitSuccess) $ fail "Serial port configuration failed."
 
+-- |Creates DMX device and returns it.
+createEnttecDmxUsbPro :: FilePath -> IO Enttec
+createEnttecDmxUsbPro devPath = do
+  frame <- initArray
+  return $ Enttec { devH    = undefined
+                  , devPath = devPath
+                  , frame   = frame
+                  }
+
 instance DmxHost Enttec where
-  create devPath = do
-    frame <- initArray
-    return $ Enttec { devH    = undefined
-                    , devPath = devPath
-                    , frame   = frame
-                    }
   
   reopenDevice = do
     path <- gets devPath
@@ -66,7 +67,7 @@ instance DmxHost Enttec where
     h <- gets devH
     lift $ hClose h
   
-  setChannel channel value = do
+  setChannel' channel value = do
     array <- gets frame
     lift $ writeArray array (channelZeroIx + channel) value
 
