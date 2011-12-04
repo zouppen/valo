@@ -1,6 +1,7 @@
 \documentclass{article}
 %include lhs2TeX.fmt
 %include lhs2TeX.sty
+%format <?> = "~\textbf{?}~"
 \usepackage{hyperref}
 \begin{document}
 \title{Valo datagram protocol}
@@ -23,9 +24,21 @@ self-explanatory to any protocol programmer.
 
 The following Haskell modules are used:
 
-> import Data.Attoparsec.ByteString
+> import Data.Attoparsec.ByteString as A
 > import Data.Bits
 > import Data.Word
+> import Data.Text.Encoding
+> import Data.Text (Text)
+
+\section{Data types}
+
+Data types are defined as Enumerations or Named Fields of
+Haskell. Your implementation is free to use any kind of data
+structure, like JSON or native C structs.
+
+> data Frame = Tag Text
+>            | Light
+>            deriving (Show)
 
 \section{Protocol definition}
 
@@ -50,13 +63,60 @@ recursively ask for next byte. Otherwise we stop. As said in source code:
 > 		then  natural'  (value+1)  -- Recurse. Summing 
 > 		else  return    value      -- Stop
 
-Because the accumulator is redundant when called from outside, a shorthand function is defined:
+Because the accumulator is redundant when called from outside, a
+shorthand function is defined:
 
 > natural :: Parser Integer
 > natural = natural' 0
 
 \subsection{Datagram}
 
-Datagram starts with version indicator. The version 0 is reserved to the legacy implementation of Valo and version 1 is the current version. In this paper the old version is ignored completely. If you want to support it, you may look the sources at \url{https://github.com/zouppen/valo}.
+Datagram starts with version indicator. The version 0 is reserved to
+the legacy implementation of Valo and version 1 is the current
+version. In this paper the old version is ignored completely. If you
+want to support it, you may look the sources at
+\url{https://github.com/zouppen/valo}.
+
+Version byte is followed by actual frames. Minimum number of frames
+per packet is one and maximum number of frames is limited by UDP
+datagram maximum length. The formal definition is:
+
+> datagram :: Parser [Frame]
+> datagram = do
+> 	word8 0x01 <?> "Only protocol version 1 is supported"
+> 	many1 frame <?> "At least one frame must be submitted"
+
+Frame contains actual command for a single device or distinct
+controllable unit like light fixture, smoke machine, or similar. The
+definition is trivial:
+
+> frame :: Parser Frame
+> frame = choice [tag,light]
+
+\subsection{Tag}
+
+Tag is a frame which appends any string to log messages. It is useful
+not only in debugging but also in plotting user activity. Keep in mind
+this shouldn't ever used in any kind of accounting. There's no
+cryptography involved.
+
+Tag starts with value of 0x00 and UTF-8 encoded string follows. The
+tag is terminated with 0x00 like strings in C programming languge.
+
+> tag :: Parser Frame
+> tag = do
+> 	word8 0x00
+> 	bytes <- A.takeWhile (/= 0x00)
+>	word8 0x00
+> 	case decodeUtf8' bytes of
+>		Left e   -> fail $ show e
+>		Right a  -> return $ Tag a
+
+\subsection{Light}
+
+Light TODO.
+
+> light :: Parser Frame
+> light = undefined
 
 \end{document}
