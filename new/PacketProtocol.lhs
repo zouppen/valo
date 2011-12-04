@@ -12,8 +12,12 @@ sligthly modified version.
 All reference code in this documentation is written in Haskell but should be
 self-explanatory to any protocol programmer.
 
+TODO more motivation, comparison to different protocols like DMX,
+Artnet, etc.
+
 The following Haskell modules are used:
 
+> import Control.Monad (ap,when)
 > import Data.Attoparsec.ByteString as A
 > import Data.Bits
 > import Data.Word
@@ -23,13 +27,21 @@ The following Haskell modules are used:
 Data types
 ==========
 
-Data types are defined as Enumerations or Named Fields of
+Data types are defined as Enumerations and Named Fields of
 Haskell. Your implementation is free to use any kind of data
 structure, like JSON or native C structs.
 
-> data Frame = Tag Text
->            | Light
->            deriving (Show)
+A datagram may contain multiple frames. Frame definition:
+
+> data Frame  =  Tag Text
+>             |  Light Integer Colour
+>                deriving (Show)
+
+Lights have colour information associated which is colourspace dependent. Here is the definition:
+
+> data Colour  =  RGB Word8 Word8 Word8
+>              |  HSV Word8 Word8 Word8
+>                 deriving (Show)
 
 Protocol definition
 ===================
@@ -51,7 +63,7 @@ recursively ask for next byte. Otherwise we stop.
 > natural' :: Integer -> Parser Integer
 > natural' acc = do
 > 	byte <- anyWord8
->	let value = acc `shiftL` 7 .|. ((fromIntegral byte) `clearBit` 7)
+>	let value = acc `shiftL` 7 .|. fromIntegral byte `clearBit` 7
 > 	if byte `testBit` 7
 > 		then  natural'  (value+1)  -- Recurse
 > 		else  return    value      -- Stop
@@ -61,6 +73,16 @@ shorthand function is defined:
 
 > natural :: Parser Integer
 > natural = natural' 0
+
+If your platform of choice makes it unconvenient to handle unbounded
+numbers the natural number may be restricted to the range of [0,127]. That is
+not an issue if there is no use for higher indices.
+
+> naturalInJava :: Parser Integer
+> naturalInJava = do
+>	value <- anyWord8
+>	when (value > 127) (fail "This implementation is a bit broken")
+>	return (fromIntegral value)
 
 Datagram
 --------
@@ -85,22 +107,26 @@ controllable unit like light fixture, smoke machine, or similar. The
 definition is trivial:
 
 > frame :: Parser Frame
-> frame = choice [tag,light]
+> frame = do
+>	a <- natural
+>	case a of
+>		0 -> tag
+>		1 -> light
+>		_ -> fail "Unsupported frame type"
 
 Tag
 ---
 
 Tag is a frame which appends any string to log messages. It is useful
 not only in debugging but also in plotting user activity. Keep in mind
-this shouldn't ever used in any kind of accounting. There's no
+this should not ever used in any kind of accounting. There's no
 cryptography involved.
 
-Tag starts with value of 0x00 and UTF-8 encoded string follows. The
-tag is terminated with 0x00 like strings in C programming languge.
+Tag contains UTF-8 encoded string and it is terminated with 0x00 like
+strings in C programming languge.
 
 > tag :: Parser Frame
 > tag = do
-> 	word8 0
 > 	bytes <- A.takeWhile (/= 0)
 >	word8 0
 > 	case decodeUtf8' bytes of
@@ -110,7 +136,52 @@ tag is terminated with 0x00 like strings in C programming languge.
 Light
 -----
 
-Light TODO.
+There is wide variety of lightning which falls into this
+category. Spot lights with colour disc, LED bars, dimmer-controlled
+spot lights, etc. Light colour can be expressed in variety of formats
+but there is always some kind of native colourspace the hardware
+supports.
+
+The server should therefore support conversion from a colourspace to
+another if the client device is not capable of doing such
+conversions. Algorithms of doing that are not part of this
+specification, but there are plenty of literature and Web sources
+covering that issue.
+
+A light has ID and colour. The frame starts with ID, is followed by
+colourspace type and actual colour definition which is type dependent.
 
 > light :: Parser Frame
-> light = undefined
+> light = do
+>	id      <- natural
+>	kind    <- natural
+>	colour  <- case kind of
+>		0 -> rgb
+>		1 -> hsv
+>		_ -> fail "Unknown light type"
+>	return (Light id colour)
+
+RGB colourspace is probably the most common type of representing
+colours. It is composed of three 8-bit channels representing red,
+green and blue channels, respectively. Most LED fixtures, monitors,
+and human eyes have this kind of internal structure.
+
+> rgb :: Parser Colour
+> rgb = return RGB `ap` anyWord8 `ap` anyWord8 `ap` anyWord8
+
+HSV stands for Hue, Saturation and Value. It is an alternative way of
+representing colours and is native in some (old) fixtures. However
+this is probably the most natural way for a human to comprehend
+colours.
+
+> hsv :: Parser Colour
+> hsv = return HSV `ap` anyWord8 `ap` anyWord8 `ap` anyWord8
+
+Instrutions for colourspace manipulation guidance.
+
+Asynchronous serial protocol
+============================
+
+Motivation: Arduino
+
+TODO
