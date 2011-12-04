@@ -1,5 +1,10 @@
 #!/bin/bash -eu
-lhs2TeX PacketProtocol.lhs >PacketProtocol.tex
+GEN="pandoc -s -f markdown+lhs PacketProtocol.md"
+$GEN -t html -o specs.html
+$GEN -t latex -o specs.tex
+# Actual source for GHC
+$GEN -t latex+lhs -o PacketProtocol.lhs
+# And the PDF
 pdflatex PacketProtocol.tex
-pandoc -f latex+lhs -t html PacketProtocol.tex -o PacketProtocol.html
+
 
