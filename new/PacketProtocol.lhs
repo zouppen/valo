@@ -37,23 +37,27 @@ A datagram may contain multiple frames. Frame definition:
 >             |  Light Integer Colour
 >                deriving (Show)
 
-Lights have colour information associated which is colourspace dependent. Here is the definition:
+Lights have colour information associated which is colourspace
+dependent. Here is the definition:
 
 > data Colour  =  RGB Word8 Word8 Word8
 >              |  HSV Word8 Word8 Word8
 >                 deriving (Show)
 
-Protocol definition
-===================
+Primitives
+==========
 
-We start by defining natural number and then proceed into the actual protocol definition.
+At first some binary representation formats are defined. These are
+used in actual protocol definition.
 
 Natural number
 --------------
 
-One of the key data types of Valo is unbounded natural number. It is
-derived from the spirit of UTF-8 while being simpler to implement and
-somewhat more space efficient.
+One of the key data types of Valo is unbounded natural number. It's an
+integer with lowest possible value of zero. Therefore it is very
+suitable in uses where enumeration or index value is required. The
+binary format has the spirit of UTF-8 while being simpler
+to implement and somewhat more space efficient.
 
 Let's define natural number recursively. We shift the accumulator left
 by 7 bits and OR it with a 8-bit word we read from the stream,
@@ -83,6 +87,42 @@ not an issue if there is no use for higher indices.
 >	value <- anyWord8
 >	when (value > 127) (fail "This implementation is a bit broken")
 >	return (fromIntegral value)
+
+Proportion
+----------
+
+Proportion is used when there is no clear accuracy requirement but
+there are clear bounds. The bounds are not transferred on wire so it's
+necessary to define them in specification. The most common use is to
+have minimum of 0 and maximum of 1, like the luminance value in HSV.
+
+Although the definition has arbitary precision, the characteristics of
+floating-point unit make it practically limited precision when using
+types of Float and Double. For example the IEEE double-precision float
+has the precision of 53 bits. That's pretty much enough for any usage
+we may encounter. If you feel sharp, you may use Rational, which makes
+the proportion type really arbitary precision.
+
+> proportion :: (Fractional a) => (a,a) -> Parser a
+> proportion (min,max) = choice [short,long]
+>	where
+>		short = do  -- Value of 0x7f is considered maximum.
+>			byte <- satisfy (<128)
+>			return (fromIntegral byte * scale / 127 + min)
+>		long = do   -- Part of multi-byte value.
+>			byte <- anyWord8
+>			let value = fromIntegral (byte `clearBit` 7)*scale/128
+>			new <- proportion (0,scale/128)
+>			return (min+value+new)
+>		scale = max-min
+
+Protocol definition
+===================
+
+Protocol is uni-directional and uses binary representation. On UDP
+trasport layer one UDP datagram payload represents a datagram in this
+specification. A datagram is composed of frames. A frame may be a tag,
+light control message or similar.
 
 Datagram
 --------
