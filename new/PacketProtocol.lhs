@@ -17,6 +17,7 @@ Artnet, etc.
 
 The following Haskell modules are used:
 
+> import Prelude as P
 > import Control.Monad (ap,when)
 > import Data.Attoparsec.ByteString as A
 > import Data.Bits
@@ -56,27 +57,36 @@ Natural number
 One of the key data types of Valo is unbounded natural number. It's an
 integer with lowest possible value of zero. Therefore it is very
 suitable in uses where enumeration or index value is required. The
-binary format has the spirit of UTF-8 while being simpler
-to implement and somewhat more space efficient.
+binary format defined in [Matroska
+specification](http://matroska.org/technical/specs/index.html) as Data
+Size. The only difference is that "unknown" value is reserved but not
+used.
 
-Let's define natural number recursively. We shift the accumulator left
-by 7 bits and OR it with a 8-bit word we read from the stream,
-ignoring the MSB of that byte. If the read byte has MSB set, then we
-recursively ask for next byte. Otherwise we stop. 
+In Matroska, integers are defined as multi-byte sequences with size
+indicator at the beginning. 
 
-> natural' :: Integer -> Parser Integer
-> natural' acc = do
+> blob :: Parser (Integer,Int)
+> blob = do
 > 	byte <- anyWord8
->	let value = acc `shiftL` 7 .|. fromIntegral byte `clearBit` 7
-> 	if byte `testBit` 7
-> 		then  natural'  (value+1)  -- Recurse
-> 		else  return    value      -- Stop
+>	let bytes = length $ P.takeWhile (==False) $ map (testBit byte) [7,6..0]
+>	let initial = fromIntegral $ byte `complementBit` (7-bytes)
+>	let totalBits = 6-bytes+8*bytes
+>	value <- moreblobs bytes initial
+>	return (value,totalBits)
+>	where
+>		moreblobs 0 acc = return acc 
+>		moreblobs n acc = do
+>			byte <- anyWord8
+>			let cur = acc `shiftL` 8 .|. fromIntegral byte
+>			moreblobs (n-1) cur
 
 Because the accumulator is redundant when called from outside, a
 shorthand function is defined:
 
 > natural :: Parser Integer
-> natural = natural' 0
+> natural = do
+>	(a,_) <- blob
+>	return a
 
 If your platform of choice makes it unconvenient to handle unbounded
 numbers the natural number may be restricted to the range of [0,127]. That is
@@ -130,8 +140,8 @@ Datagram
 Datagram starts with version indicator. The version 0 is reserved to
 the legacy implementation of Valo and version 1 is the current
 version. In this paper the old version is ignored completely. If you
-want to support it, you may look the sources at
-\url{https://github.com/zouppen/valo}.
+want to support it, you may look the [sources of the old
+implementation](https://github.com/zouppen/valo).
 
 Version byte is followed by actual frames. Minimum number of frames
 per packet is one and maximum number of frames is limited by UDP
